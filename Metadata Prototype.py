@@ -75,23 +75,34 @@ def create_manifest(prompt: str):
 
 def check_manifest():
     """
-    Comprueba si existe el manifest.json y lo imprime.
+    Pide la ruta de la imagen, busca el manifest asociado
+    y verifica si está marcada como IA.
     """
-    if not os.path.exists(MANIFEST_FILE):
-        print("\nNo hay manifest. La imagen no fue marcada como IA.")
+    image_path = input("Ingresa la ruta de la imagen: ").strip()
+
+    if not os.path.exists(image_path):
+        print(f"La imagen {image_path} no existe.")
         return
 
-    with open(MANIFEST_FILE, "r") as f:
+    # Construir ruta del manifest asociado
+    manifest_path = os.path.splitext(image_path)[0] + "_manifest.json"
+
+    if not os.path.exists(manifest_path):
+        print("\nNo existe manifest. La imagen no fue marcada como IA.")
+        return
+
+    with open(manifest_path, "r", encoding="utf-8") as f:
         manifest = json.load(f)
 
-    ai_generated = manifest["assertions"][0]["data"].get("generated_by_ai", False)
+    ai_generated = manifest.get("ai_generated", False)
 
     if ai_generated:
         print("\n La imagen está marcada como generada por IA.")
-        print(" Contenido del manifest:")
+        print("Contenido del manifest:")
         print(json.dumps(manifest, indent=4))
     else:
-        print("\n La imagen no está marcada como IA.")
+        print("\nLa imagen no está marcada como IA.")
+
 
 
 def menu():
