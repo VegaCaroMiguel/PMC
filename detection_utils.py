@@ -52,3 +52,4 @@ def detect_image_status(image_path: str) -> dict:
     return result
 
 
+
