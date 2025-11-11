@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test de Imágenes</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #1a1a1a; color: white; }
+        img { max-width: 300px; border: 2px solid #444; margin: 10px; }
+        .test { margin: 20px 0; padding: 20px; background: #2a2a2a; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Carga de Imágenes</h1>
+    
+    <div class="test">
+        <h2>Prueba 1: Rutas absolutas con timestamp</h2>
+        <img src="/uploads/gato1.jpg?t=<?php echo time(); ?>" alt="gato1" onerror="this.style.border='2px solid red'">
+        <img src="/uploads/gato2.jpg?t=<?php echo time(); ?>" alt="gato2" onerror="this.style.border='2px solid red'">
+        <img src="/uploads/gato3.jpg?t=<?php echo time(); ?>" alt="gato3" onerror="this.style.border='2px solid red'">
+    </div>
+    
+    <div class="test">
+        <h2>Prueba 2: Rutas simples</h2>
+        <img src="/uploads/gato1.jpg" alt="gato1" onerror="this.style.border='2px solid red'">
+        <img src="/uploads/gato2.jpg" alt="gato2" onerror="this.style.border='2px solid red'">
+        <img src="/uploads/gato3.jpg" alt="gato3" onerror="this.style.border='2px solid red'">
+    </div>
+    
+    <div class="test">
+        <h2>Consola de errores:</h2>
+        <div id="console" style="background: #000; padding: 10px; font-family: monospace; font-size: 12px;"></div>
+    </div>
+    
+    <script>
+        // Capturar errores de imagen
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                const log = document.getElementById('console');
+                log.innerHTML += `❌ Error cargando: ${e.target.src}<br>`;
+            }
+        }, true);
+        
+        // Log de imágenes cargadas
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('load', function() {
+                const log = document.getElementById('console');
+                log.innerHTML += `✅ Cargada: ${this.src}<br>`;
+            });
+        });
+    </script>
+</body>
+</html>

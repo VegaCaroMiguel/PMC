@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Detección IA – Demo</title>
+  <title>Detección IA con C2PA – PMC</title>
   <style>
     :root {
       --bg: #0b1220;
@@ -22,141 +22,614 @@
       }
     }
     * { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: var(--text); background: radial-gradient(1200px 600px at 20% -20%, #1a2a4a33, transparent), radial-gradient(1000px 800px at 120% 0%, #2a3a6a22, transparent), var(--bg); margin: 0; }
-    .container { max-width: 1040px; margin: 0 auto; padding: 32px 20px; }
-    header { margin-bottom: 16px; }
-    h1 { margin: 0 0 6px; font-weight: 700; letter-spacing: .2px; }
-    .subtitle { margin: 0; color: var(--subtext); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
-    .card { background: linear-gradient(180deg, var(--panel), #0b1324); border: 1px solid var(--panel-border); border-radius: 14px; padding: 16px; box-shadow: 0 10px 24px rgba(10, 20, 40, .25), inset 0 1px 0 rgba(255,255,255,.03); }
-    .card h3 { margin-top: 0; }
-    .preview { display: grid; grid-template-columns: 88px 1fr; gap: 12px; align-items: center; padding: 10px; border: 1px dashed var(--panel-border); border-radius: 12px; }
-    .preview img { width: 88px; height: 88px; object-fit: cover; border-radius: 10px; border: 1px solid var(--panel-border); }
-    .muted { color: var(--subtext); font-size: .95rem; }
-    .btn { cursor: pointer; padding: .6rem .9rem; border-radius: 10px; border: 1px solid var(--panel-border); background: linear-gradient(180deg, #182544, #111b33); color: var(--text); }
-    .btn:hover { filter: brightness(1.05); }
-    .btn.primary { border-color: #2c47a1; background: linear-gradient(180deg, #2b50b8, #18317a); box-shadow: 0 6px 18px rgba(54, 92, 245, .25); }
-    .dropzone { display: grid; place-items: center; text-align: center; border: 2px dashed var(--panel-border); border-radius: 12px; padding: 18px; }
+    body { 
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
+      color: var(--text); 
+      background: radial-gradient(1200px 600px at 20% -20%, #1a2a4a33, transparent), 
+                  radial-gradient(1000px 800px at 120% 0%, #2a3a6a22, transparent), 
+                  var(--bg); 
+      margin: 0; 
+      padding: 0;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+    header { margin-bottom: 24px; text-align: center; }
+    h1 { margin: 0 0 8px; font-weight: 700; letter-spacing: .2px; font-size: 2.2rem; }
+    .subtitle { margin: 0; color: var(--subtext); font-size: 1.1rem; }
+    
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--panel-border); }
+    .tab { 
+      padding: 12px 24px; 
+      cursor: pointer; 
+      border: none; 
+      background: transparent; 
+      color: var(--subtext); 
+      font-size: 1rem;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+    .tab:hover { color: var(--text); background: rgba(91, 140, 255, 0.1); }
+    .tab.active { 
+      color: var(--accent); 
+      border-bottom-color: var(--accent); 
+      background: rgba(91, 140, 255, 0.05);
+    }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 1024px) {
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+    
+    .card { 
+      background: linear-gradient(180deg, var(--panel), #0b1324); 
+      border: 1px solid var(--panel-border); 
+      border-radius: 14px; 
+      padding: 20px; 
+      box-shadow: 0 10px 24px rgba(10, 20, 40, .25), inset 0 1px 0 rgba(255,255,255,.03); 
+    }
+    .card h2, .card h3 { margin-top: 0; color: var(--text); }
+    .card h2 { font-size: 1.5rem; margin-bottom: 16px; }
+    .card h3 { font-size: 1.2rem; margin-bottom: 12px; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text); }
+    .form-group input, .form-group textarea { 
+      width: 100%; 
+      padding: 10px 12px; 
+      border: 1px solid var(--panel-border); 
+      border-radius: 8px; 
+      background: #0d172b; 
+      color: var(--text); 
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-group input:focus, .form-group textarea:focus { 
+      outline: none; 
+      border-color: var(--accent); 
+      box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.1);
+    }
+    
+    .btn { 
+      cursor: pointer; 
+      padding: 12px 20px; 
+      border-radius: 10px; 
+      border: 1px solid var(--panel-border); 
+      background: linear-gradient(180deg, #182544, #111b33); 
+      color: var(--text); 
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+    .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.primary { 
+      border-color: #2c47a1; 
+      background: linear-gradient(180deg, #2b50b8, #18317a); 
+      box-shadow: 0 6px 18px rgba(54, 92, 245, .25); 
+    }
+    .btn.success {
+      border-color: #166534;
+      background: linear-gradient(180deg, #22c55e, #16a34a);
+      box-shadow: 0 6px 18px rgba(34, 197, 94, .25);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .dropzone { 
+      display: grid; 
+      place-items: center; 
+      text-align: center; 
+      border: 2px dashed var(--panel-border); 
+      border-radius: 12px; 
+      padding: 24px; 
+      min-height: 150px;
+      transition: all 0.3s;
+    }
     .dropzone.dragover { border-color: var(--accent); background: #365cf50d; }
-    .badge { display: inline-flex; align-items: center; gap: 8px; padding: .35rem .6rem; border-radius: 999px; border: 1px solid var(--panel-border); font-weight: 600; }
+    .dropzone:hover { border-color: var(--accent); }
+    
+    .badge { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      padding: 8px 16px; 
+      border-radius: 999px; 
+      border: 1px solid var(--panel-border); 
+      font-weight: 600; 
+      font-size: 0.95rem;
+    }
     .badge.ok { color: #0f5132; background: #22c55e22; border-color: #22c55e55; }
     .badge.warn { color: #7a4a03; background: #f59e0b22; border-color: #f59e0b55; }
     .badge.danger { color: #7f1d1d; background: #ef444422; border-color: #ef444455; }
-    .result { background: #0d172b; border: 1px solid var(--panel-border); border-radius: 12px; padding: 12px; }
-    .result-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-    .result pre { margin: 0; white-space: pre-wrap; color: #dbe6ff; }
-    footer { margin-top: 28px; text-align: center; color: var(--subtext); font-size: .9rem; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .badge.info { color: #0c4a6e; background: #0ea5e922; border-color: #0ea5e955; }
+    
+    .result { 
+      background: #0d172b; 
+      border: 1px solid var(--panel-border); 
+      border-radius: 12px; 
+      padding: 16px; 
+      margin-top: 20px;
+    }
+    .result-header { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      gap: 12px; 
+      margin-bottom: 16px; 
+      flex-wrap: wrap;
+    }
+    .result pre { 
+      margin: 0; 
+      white-space: pre-wrap; 
+      color: #dbe6ff; 
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    .preview-card { 
+      display: flex;
+      flex-direction: column;
+      gap: 12px; 
+      padding: 16px; 
+      border: 1px solid var(--panel-border); 
+      border-radius: 12px; 
+      background: #0d172b;
+      transition: all 0.3s;
+    }
+    .preview-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(91, 140, 255, 0.2);
+    }
+    .preview-card img { 
+      width: 100%; 
+      height: 200px; 
+      object-fit: cover; 
+      border-radius: 10px; 
+      border: 1px solid var(--panel-border); 
+    }
+    .preview-card .info { text-align: center; }
+    .preview-card .info strong { display: block; margin-bottom: 6px; font-size: 1.1rem; }
+    .preview-card .info .muted { color: var(--subtext); font-size: 0.9rem; }
+    
+    .muted { color: var(--subtext); }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    
+    .info-section { 
+      margin-top: 16px; 
+      padding: 12px; 
+      background: rgba(91, 140, 255, 0.05); 
+      border-left: 3px solid var(--accent); 
+      border-radius: 6px; 
+    }
+    .info-section h4 { margin: 0 0 8px; color: var(--accent); font-size: 1rem; }
+    .info-section p { margin: 4px 0; font-size: 0.95rem; }
+    
+    .success-message, .error-message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-weight: 600;
+    }
+    .success-message {
+      background: #22c55e22;
+      border: 1px solid #22c55e55;
+      color: #22c55e;
+    }
+    .error-message {
+      background: #ef444422;
+      border: 1px solid #ef444455;
+      color: #ef4444;
+    }
+    
+    footer { margin-top: 40px; text-align: center; color: var(--subtext); font-size: 0.9rem; padding: 20px 0; border-top: 1px solid var(--panel-border); }
+    
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(91, 140, 255, 0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Detección de IA con C2PA</h1>
+      <p class="subtitle">Sistema de marcado y verificación de contenido generado por IA (PNG y JPEG)</p>
+    </header>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('main')">Principal</button>
+      <button class="tab" onclick="switchTab('examples')">Ejemplos</button>
+    </div>
+
+    <!-- TAB 1: PRINCIPAL -->
+    <div id="tab-main" class="tab-content active">
+      <div class="grid">
+        <!-- Sección: Marcar como IA -->
+        <div class="card">
+          <h2>Marcar como IA</h2>
+          <p class="muted" style="margin-bottom: 16px;">Sube una imagen PNG o JPEG y agrégale metadatos C2PA para marcarla como generada por IA</p>
+          
+          <form id="markForm" onsubmit="markAsAI(event)">
+            <div class="form-group">
+              <label for="markFile">Imagen (PNG o JPEG)</label>
+              <input type="file" id="markFile" accept="image/png,image/jpeg,image/jpg" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="promptInput">Prompt / Descripción</label>
+              <textarea id="promptInput" placeholder="Ej: Un gato astronauta en el espacio"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="modelInput">Modelo (opcional)</label>
+              <input type="text" id="modelInput" placeholder="Ej: OpenAI DALL-E 3">
+            </div>
+            
+            <div class="form-group">
+              <label for="authorInput">Autor (opcional)</label>
+              <input type="text" id="authorInput" placeholder="Tu nombre u organización">
+            </div>
+            
+            <button type="submit" class="btn success" style="width: 100%;">
+              Marcar como IA con C2PA
+            </button>
+          </form>
+          
+          <div id="markResult"></div>
+        </div>
+
+        <!-- Sección: Comprobar si es IA -->
+        <div class="card">
+          <h2>Comprobar si es IA</h2>
+          <p class="muted" style="margin-bottom: 16px;">Verifica si una imagen tiene metadatos C2PA y fue generada por IA</p>
+          
+          <div id="detectDropzone" class="dropzone">
+            <div>
+              <div class="muted" style="margin-bottom: 12px;">Arrastra PNG/JPEG aquí o selecciónalo</div>
+              <input type="file" id="detectFile" accept="image/png,image/jpeg,image/jpg" style="margin-bottom: 12px;">
+              <button class="btn primary" onclick="detectImage()">Verificar Imagen</button>
+            </div>
+          </div>
+          
+          <div id="detectResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: EJEMPLOS -->
+    <div id="tab-examples" class="tab-content">
+      <div class="card">
+        <h2>Imágenes de Ejemplo</h2>
+        <p class="muted" style="margin-bottom: 20px;">Prueba la detección con estas imágenes de ejemplo</p>
+        
+        <div class="grid-3">
+          <div class="preview-card">
+            <img src="/uploads/gato1.jpg" alt="gato1" onerror="this.style.opacity=0.3; this.alt='Imagen no disponible'">
+            <div class="info">
+              <strong>gato1.jpg</strong>
+              <button class="btn primary" onclick="detectSample('gato1')" style="width: 100%; margin-top: 8px;">
+                Verificar gato1
+              </button>
+            </div>
+          </div>
+
+          <div class="preview-card">
+            <img src="/uploads/gato2.jpg" alt="gato2" onerror="this.style.opacity=0.3; this.alt='Imagen no disponible'">
+            <div class="info">
+              <strong>gato2.jpg</strong>
+              <button class="btn primary" onclick="detectSample('gato2')" style="width: 100%; margin-top: 8px;">
+                Verificar gato2
+              </button>
+            </div>
+          </div>
+
+          <div class="preview-card">
+            <img src="/uploads/gato3.jpg" alt="gato3" onerror="this.style.opacity=0.3; this.alt='Imagen no disponible'">
+            <div class="info">
+              <strong>gato3.jpg</strong>
+              <button class="btn primary" onclick="detectSample('gato3')" style="width: 100%; margin-top: 8px;">
+                Verificar gato3
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="exampleResult" class="result" style="display: none;">
+          <div class="result-header">
+            <div class="row">
+              <span id="exampleBadge" class="badge warn">Esperando...</span>
+              <span id="exampleSource" class="muted"></span>
+            </div>
+            <div id="exampleFileName" class="muted"></div>
+          </div>
+          <pre id="exampleOutput">Esperando verificación...</pre>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>PMC - Sistema de Proveniencia y Marcado de Contenido con C2PA v1.3</p>
+      <p class="muted">© 2025 - Detección de contenido generado por IA</p>
+    </footer>
+  </div>
+
   <script>
-    function renderStatus(data) {
-      const badge = document.getElementById('badge');
-      const sourceEl = document.getElementById('source');
-      const fileEl = document.getElementById('fileName');
-      const details = document.getElementById('output');
-      if (!data || data.error) {
-        badge.className = 'badge warn';
-        badge.textContent = 'Sin datos';
-        sourceEl.textContent = '';
-        fileEl.textContent = '';
-        details.textContent = JSON.stringify(data || { error: 'Sin datos' }, null, 2);
-        return;
-      }
-      fileEl.textContent = data.image || '';
-      const isAI = !!data.ai_generated;
-      badge.className = 'badge ' + (isAI ? 'danger' : 'ok');
-      badge.textContent = isAI ? 'Generada por IA' : 'No IA (sin marca)';
-      const sourceMap = { png_metadata: 'Metadatos PNG', sidecar_manifest: 'Manifest sidecar', none: 'No encontrado' };
-      sourceEl.textContent = 'Origen: ' + (sourceMap[data.source] || '—');
-      details.textContent = JSON.stringify(data, null, 2);
+    // Tab Switching
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      
+      // Show selected tab
+      document.getElementById('tab-' + tabName).classList.add('active');
+      event.target.classList.add('active');
     }
 
+    // Mark as AI
+    async function markAsAI(event) {
+      event.preventDefault();
+      
+      const fileInput = document.getElementById('markFile');
+      const resultDiv = document.getElementById('markResult');
+      
+      if (!fileInput.files.length) {
+        resultDiv.innerHTML = '<div class="error-message">Por favor selecciona un archivo PNG o JPEG</div>';
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('prompt', document.getElementById('promptInput').value || 'Imagen marcada manualmente');
+      formData.append('model', document.getElementById('modelInput').value || 'Manual Marking System');
+      formData.append('author', document.getElementById('authorInput').value || 'User');
+      
+      resultDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><span class="loading"></span> Marcando imagen...</div>';
+      
+      try {
+        const response = await fetch('/mark-as-ai', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="success-message">
+              Imagen marcada exitosamente con C2PA
+            </div>
+            <div class="info-section">
+              <h4>Información del Marcado</h4>
+              <p><strong>Imagen:</strong> ${data.image}</p>
+              <p><strong>Formato:</strong> ${data.format ? data.format.toUpperCase() : 'N/A'}</p>
+              <p><strong>Manifest:</strong> ${data.manifest_path}</p>
+              <p><strong>Tipo de firma:</strong> ${data.signature_type}</p>
+              <p><strong>C2PA embebido:</strong> ${data.c2pa_embedded ? 'Sí' : 'No'}</p>
+            </div>
+          `;
+          
+          // Reset form
+          document.getElementById('markForm').reset();
+        } else {
+          resultDiv.innerHTML = `<div class="error-message">Error: ${data.error}</div>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<div class="error-message">Error de conexión: ${error.message}</div>`;
+      }
+    }
+
+    // Detect Image
+    async function detectImage() {
+      const fileInput = document.getElementById('detectFile');
+      const resultDiv = document.getElementById('detectResult');
+      
+      if (!fileInput.files.length) {
+        resultDiv.innerHTML = '<div class="error-message">Por favor selecciona un archivo PNG o JPEG</div>';
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      
+      resultDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><span class="loading"></span> Verificando imagen...</div>';
+      
+      try {
+        const response = await fetch('/detect', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        renderDetectionResult(data, resultDiv);
+      } catch (error) {
+        resultDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+      }
+    }
+
+    // Detect Sample
     async function detectSample(sample) {
       const formData = new FormData();
       formData.append('sample', sample);
-      const res = await fetch('/detect', { method: 'POST', body: formData });
-      const data = await res.json();
-      renderStatus(data);
+      
+      const resultDiv = document.getElementById('exampleResult');
+      resultDiv.style.display = 'block';
+      
+      document.getElementById('exampleBadge').className = 'badge warn';
+      document.getElementById('exampleBadge').textContent = 'Verificando...';
+      document.getElementById('exampleOutput').textContent = 'Analizando imagen...';
+      
+      try {
+        const response = await fetch('/detect', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        renderExampleResult(data);
+      } catch (error) {
+        document.getElementById('exampleOutput').textContent = `Error: ${error.message}`;
+      }
     }
 
-    async function detectUpload() {
-      const fileInput = document.getElementById('file');
-      if (!fileInput.files.length) { alert('Selecciona un archivo PNG.'); return; }
-      const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
-      const res = await fetch('/detect', { method: 'POST', body: formData });
-      const data = await res.json();
-      renderStatus(data);
+    // Render Detection Result
+    function renderDetectionResult(data, container) {
+      if (!data || data.error) {
+        container.innerHTML = `<div class="error-message">${data?.error || 'Sin datos'}</div>`;
+        return;
+      }
+      
+      const isAI = data.ai_generated;
+      const badgeClass = isAI ? 'danger' : 'ok';
+      const badgeText = isAI ? 'Generada por IA' : 'No es IA';
+      
+      const sourceMap = {
+        'c2pa_manifest': 'Manifest C2PA (firmado)',
+        'png_metadata': 'Metadatos PNG básicos',
+        'jpeg_metadata': 'Metadatos JPEG/EXIF',
+        'jpg_metadata': 'Metadatos JPEG/EXIF',
+        'sidecar_manifest': 'Manifest sidecar',
+        'none': 'Sin marcas de IA'
+      };
+      
+      let html = `
+        <div class="result">
+          <div class="result-header">
+            <span class="badge ${badgeClass}">${badgeText}</span>
+            <div>
+              <span class="muted">${data.image}</span>
+              ${data.format ? `<span class="badge info" style="margin-left: 8px;">${data.format.toUpperCase()}</span>` : ''}
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <h4>Origen de Detección</h4>
+            <p>${sourceMap[data.source] || 'Desconocido'}</p>
+          </div>
+      `;
+      
+      if (isAI && data.details) {
+        html += `
+          <div class="info-section">
+            <h4>Detalles de IA</h4>
+            ${data.details.model ? `<p><strong>Modelo:</strong> ${data.details.model}</p>` : ''}
+            ${data.details.prompt ? `<p><strong>Prompt:</strong> ${data.details.prompt}</p>` : ''}
+            ${data.details.created_date ? `<p><strong>Fecha:</strong> ${data.details.created_date}</p>` : ''}
+          </div>
+        `;
+      }
+      
+      if (data.c2pa_info) {
+        html += `
+          <div class="info-section">
+            <h4>Información C2PA</h4>
+            <p><strong>Válido:</strong> ${data.c2pa_info.valid ? 'Sí' : 'No'}</p>
+            <p><strong>Tipo de firma:</strong> ${data.c2pa_info.signature_type}</p>
+            ${data.c2pa_info.note ? `<p><strong>Nota:</strong> ${data.c2pa_info.note}</p>` : ''}
+          </div>
+        `;
+      }
+      
+      html += `
+          <details style="margin-top: 16px;">
+            <summary style="cursor: pointer; font-weight: 600; margin-bottom: 8px;">Ver JSON completo</summary>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          </details>
+        </div>
+      `;
+      
+      container.innerHTML = html;
     }
 
+    // Render Example Result
+    function renderExampleResult(data) {
+      const badge = document.getElementById('exampleBadge');
+      const source = document.getElementById('exampleSource');
+      const fileName = document.getElementById('exampleFileName');
+      const output = document.getElementById('exampleOutput');
+      
+      if (!data || data.error) {
+        badge.className = 'badge warn';
+        badge.textContent = 'Error';
+        output.textContent = JSON.stringify(data || {error: 'Sin datos'}, null, 2);
+        return;
+      }
+      
+      const isAI = data.ai_generated;
+      badge.className = 'badge ' + (isAI ? 'danger' : 'ok');
+      badge.textContent = isAI ? 'Generada por IA' : 'No es IA';
+      
+      fileName.textContent = data.image;
+      
+      const sourceMap = {
+        'c2pa_manifest': 'C2PA Manifest',
+        'png_metadata': 'PNG Metadata',
+        'jpeg_metadata': 'JPEG/EXIF',
+        'jpg_metadata': 'JPEG/EXIF',
+        'sidecar_manifest': 'Sidecar',
+        'none': 'Sin marcas'
+      };
+      source.textContent = sourceMap[data.source] || '';
+      
+      output.textContent = JSON.stringify(data, null, 2);
+    }
+
+    // Dropzone setup
     function setupDropzone() {
-      const dz = document.getElementById('dropzone');
-      const fileInput = document.getElementById('file');
-      ;['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); }))
-      ;['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); }))
+      const dz = document.getElementById('detectDropzone');
+      const fileInput = document.getElementById('detectFile');
+      
+      ['dragenter', 'dragover'].forEach(ev => {
+        dz.addEventListener(ev, e => {
+          e.preventDefault();
+          dz.classList.add('dragover');
+        });
+      });
+      
+      ['dragleave', 'drop'].forEach(ev => {
+        dz.addEventListener(ev, e => {
+          e.preventDefault();
+          dz.classList.remove('dragover');
+        });
+      });
+      
       dz.addEventListener('drop', e => {
         const files = e.dataTransfer.files;
         if (files && files.length) {
           fileInput.files = files;
-          detectUpload();
+          detectImage();
         }
       });
     }
 
     window.addEventListener('DOMContentLoaded', setupDropzone);
   </script>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Detección de imágenes generadas por IA</h1>
-      <p class="subtitle">Primero analiza metadatos PNG, luego busca un manifest sidecar por archivo.</p>
-    </header>
-
-    <section class="grid">
-      <div class="card">
-        <h3>Ejemplos rápidos</h3>
-        <div class="preview" style="margin-bottom: 10px;">
-          <img src="/gato1.png" alt="gato1" onerror="this.style.opacity=0;">
-          <div>
-            <div><strong>gato1.png</strong> <span class="muted">(real)</span></div>
-            <div class="row"><button class="btn" onclick="detectSample('gato1')">Detectar gato1</button></div>
-          </div>
-        </div>
-        <div class="preview">
-          <img src="/gato2.png" alt="gato2" onerror="this.style.opacity=0;">
-          <div>
-            <div><strong>gato2.png</strong> <span class="muted">(IA)</span></div>
-            <div class="row"><button class="btn" onclick="detectSample('gato2')">Detectar gato2</button></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Subir imagen</h3>
-        <div id="dropzone" class="dropzone">
-          <div>
-            <div class="muted" style="margin-bottom: 8px;">Arrastra un PNG aquí o selecciónalo</div>
-            <div class="row">
-              <input type="file" id="file" accept="image/png" />
-              <button class="btn primary" onclick="detectUpload()">Detectar imagen</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section style="margin-top: 18px;" class="card">
-      <div class="result-top">
-        <div class="row" style="align-items:center; gap: 10px;">
-          <span id="badge" class="badge warn">Esperando prueba…</span>
-          <span id="source" class="muted"></span>
-        </div>
-        <div id="fileName" class="muted"></div>
-      </div>
-      <div class="result"><pre id="output">Esperando prueba...</pre></div>
-    </section>
-  </div>
 </body>
 </html>
 
